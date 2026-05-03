@@ -40,7 +40,7 @@ and quietly hides the rest.
   RTK savings + token counts, MemPalace wing breakdown
 - **Native macOS notifications** — configurable warning/critical thresholds,
   reset alerts
-- **Three sign-in methods for Claude** — embedded WebKit window for
+- **Two sign-in methods for Claude** — embedded WebKit window for
   email/password accounts, or manual paste from DevTools (works with Google
   SSO too)
 - **Auto-detect** — `rtk` and `mempalace` binaries are picked up via
@@ -90,34 +90,59 @@ To build from source: Xcode 16+ and [XcodeGen](https://github.com/yonaskolb/Xcod
 
 ## Installation
 
-### Homebrew Cask (recommended)
+Three ways to install Claudex, in increasing order of effort. **Most users
+should pick option 1.**
+
+### Option 1 — Homebrew Cask (recommended)
+
+If you don't have Homebrew, install it first from
+[brew.sh](https://brew.sh) (one paste in your Terminal).
+
+Then:
 
 ```bash
 brew install --cask jarodxxx/tap/claudex
 ```
 
-The cask installs `Claudex.app` into `/Applications/`. Launch it from
-Spotlight, Launchpad, or Finder. The app is signed with an Apple Developer
-ID and notarized by Apple — Gatekeeper will let it through without warnings.
+That's it. Homebrew downloads the signed `.dmg` from GitHub Releases,
+verifies its checksum, and installs `Claudex.app` into `/Applications/`.
 
-To upgrade later:
+**Launch the app:**
+- Open Spotlight (`⌘ Space`), type `Claudex`, hit `Enter`
+- OR open the **Applications** folder in Finder and double-click Claudex
+
+The app is signed with an Apple Developer ID and notarized by Apple —
+**no Gatekeeper warning** will appear on first launch.
+
+The first time it runs, an onboarding wizard helps you connect your
+services — see [Configuration](#configuration) below.
+
+**To upgrade** (when a new version is released):
 ```bash
 brew upgrade --cask claudex
 ```
 
-To uninstall:
+**To uninstall** (removes the app + cached data + preferences):
 ```bash
 brew uninstall --cask claudex
 ```
 
-### Manual download
+### Option 2 — Manual `.dmg` download
 
-1. Grab the latest `Claudex-<version>.dmg` from
-   [GitHub Releases](https://github.com/jarodxxx/Claudex/releases)
-2. Open the `.dmg` and drag `Claudex.app` to `/Applications/`
-3. Eject the disk image, launch from Applications
+If you don't want Homebrew:
 
-### From source (developers / contributors)
+1. Open the [latest GitHub Release](https://github.com/jarodxxx/Claudex/releases/latest)
+2. Download `Claudex-<version>.dmg` (under "Assets")
+3. Double-click the `.dmg` to mount it
+4. Drag `Claudex.app` onto the **Applications** shortcut inside the disk image
+5. Eject the mounted disk (right-click on Desktop → Eject)
+6. Launch Claudex from Spotlight or Applications
+
+Same as option 1: the app is signed and notarized, no Gatekeeper warning.
+
+### Option 3 — Build from source (contributors only)
+
+For people who want to hack on Claudex itself:
 
 ```bash
 brew install xcodegen
@@ -126,14 +151,16 @@ cd Claudex
 ./scripts/dev-install.sh
 ```
 
-The script generates the Xcode project, builds Claudex with your Apple
-Development certificate (set the team ID in `project.yml`), installs it to
-`/Applications/Claudex.app`, registers it with Launch Services and launches
-it. See [docs/RELEASE.md](docs/RELEASE.md) for the public release pipeline.
+This script generates `Claudex.xcodeproj` via XcodeGen, builds with your
+own Apple Development certificate (set your team ID in `project.yml` if it
+differs from the default), installs to `/Applications/Claudex.app`, and
+launches it.
 
-> **Why install to `/Applications/`?** macOS notification services (and a
-> few other entitlements) refuse to talk to apps running from a non-stable
-> path like `~/Library/Developer/Xcode/DerivedData/`.
+> **Why install to `/Applications/`?** macOS refuses notifications to apps
+> running from a non-stable path like `~/Library/Developer/Xcode/DerivedData/`.
+
+See [docs/RELEASE.md](docs/RELEASE.md) for the public release pipeline
+(GitHub Actions → notarization → DMG → Homebrew Cask auto-bump).
 
 ## Configuration
 
@@ -142,7 +169,7 @@ re-open it any time from **Settings → General**.
 
 ### Claude
 
-Three sign-in methods, choose what fits your account:
+Two sign-in methods, choose what fits your account:
 
 #### 1. Web sign-in (recommended for email/password accounts)
 
@@ -285,11 +312,11 @@ cd Claudex
 # Generate Claudex.xcodeproj (regenerated locally; not committed)
 xcodegen generate
 
-# Edit project.yml -> DEVELOPMENT_TEAM if you want signing.
+# Edit project.yml -> DEVELOPMENT_TEAM if you want your own signing.
 # Without a team, build with: xcodebuild ... CODE_SIGNING_ALLOWED=NO build
 # (notifications won't work — see "Why install to /Applications" above)
 
-./scripts/install.sh
+./scripts/dev-install.sh
 ```
 
 Run the test suite:
