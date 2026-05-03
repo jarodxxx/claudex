@@ -1,0 +1,86 @@
+# XcodeGen spec — generates Claudex.xcodeproj from this declarative file.
+# Regenerate with: xcodegen generate
+#
+# Why XcodeGen: keeps the .xcodeproj reproducible, diff-friendly and avoids
+# manual file-add ceremony. Contributors don't fight pbxproj merge conflicts.
+
+name: Claudex
+options:
+  bundleIdPrefix: com.claudex
+  deploymentTarget:
+    macOS: "14.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  Claudex:
+    type: application
+    platform: macOS
+    sources:
+      - path: Claudex
+        excludes:
+          # Info.plist is wired via INFOPLIST_FILE — don't copy it as a resource.
+          - "Resources/Info.plist"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.claudex.app
+        PRODUCT_NAME: Claudex
+        INFOPLIST_FILE: Claudex/Resources/Info.plist
+        # CRITICAL: without this, Xcode 16+ auto-generates an Info.plist from
+        # INFOPLIST_KEY_* settings and silently ignores INFOPLIST_FILE. We need
+        # our own to enforce LSUIElement = YES (no Dock icon, menu bar only).
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        DEVELOPMENT_TEAM: 5FDYH5TMJ3
+        ENABLE_HARDENED_RUNTIME: YES
+        # No App Sandbox at this stage: keeps Process() invocations of rtk /
+        # mempalace simple and avoids Keychain access-group friction. Revisit
+        # before any Mac App Store submission.
+      configs:
+        # Local dev: use Apple Development cert via automatic signing.
+        # Required for UNUserNotificationCenter to deliver notifs.
+        Debug:
+          CODE_SIGN_STYLE: Automatic
+          CODE_SIGN_IDENTITY: "Apple Development"
+        # Public release: use Developer ID Application cert + manual signing
+        # so the .app can be distributed outside the Mac App Store and pass
+        # Gatekeeper after notarization.
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          OTHER_CODE_SIGN_FLAGS: "--timestamp --options runtime"
+
+  ClaudexTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - ClaudexTests
+    dependencies:
+      - target: Claudex
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Claudex.app/Contents/MacOS/Claudex"
+        PRODUCT_BUNDLE_IDENTIFIER: com.claudex.app.tests
+
+schemes:
+  Claudex:
+    build:
+      targets:
+        Claudex: all
+        ClaudexTests: [test]
+    test:
+      targets:
+        - ClaudexTests
+    run:
+      config: Debug
+    archive:
+      config: Release

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & Test (SwiftPM)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build
+        run: swift build -c debug
+
+      - name: Test
+        # KeychainStoreTests share a single Security item per service name and
+        # must run serially. --num-workers 1 keeps process-level isolation while
+        # avoiding errSecDuplicateItem races.
+        run: swift test --parallel --num-workers 1
+
+  xcode-build:
+    name: Build app bundle (Xcode)
+    runs-on: macos-14
+    if: hashFiles('Claudex.xcodeproj/project.pbxproj') != ''
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build .app
+        run: |
+          xcodebuild \
+            -project Claudex.xcodeproj \
+            -scheme Claudex \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
