@@ -33,7 +33,9 @@ jobs:
       - name: Select Xcode 16
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.0'
+          # Pin to 16.2 (the latest stable available on macos-14 runners as
+          # of May 2026). Update if newer Xcode 16.x lands.
+          xcode-version: 'latest-stable'
 
       - name: Install build tools
         run: |
