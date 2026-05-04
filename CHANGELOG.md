@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-05-04
+
+### Fixed
+- Claude section showed `Error: invalidResponse("missing or invalid five_hour.resets_at")`
+  when the user had no recent activity in a quota window (the API returns
+  `resets_at: null` in that case). We now fall back to a 5h / 7d projection
+  so the utilization still renders.
+
 ## [1.0.0] - 2026-05-04
 
 First public release.

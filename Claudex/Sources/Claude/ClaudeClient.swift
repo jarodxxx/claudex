@@ -104,12 +104,14 @@ struct ClaudeClient {
             return formatter.date(from: s) ?? fallbackFormatter.date(from: s)
         }
 
-        guard let sessionReset = parseDate(raw.fiveHour.resetsAt) else {
-            throw ClaudeClientError.invalidResponse("missing or invalid five_hour.resets_at")
-        }
-        guard let weeklyReset = parseDate(raw.sevenDay.resetsAt) else {
-            throw ClaudeClientError.invalidResponse("missing or invalid seven_day.resets_at")
-        }
+        // The API may return `resets_at: null` when there's no usage yet for a
+        // window. Fall back to a sensible projection so the user still sees
+        // their utilization (which is the important number) instead of an
+        // ugly error string.
+        let sessionReset = parseDate(raw.fiveHour.resetsAt)
+            ?? Date().addingTimeInterval(5 * 3600)
+        let weeklyReset = parseDate(raw.sevenDay.resetsAt)
+            ?? Date().addingTimeInterval(7 * 24 * 3600)
 
         let sonnet: PeriodUsage? = raw.sevenDaySonnet.map { p in
             let reset = parseDate(p.resetsAt) ?? Date().addingTimeInterval(7 * 24 * 3600)
