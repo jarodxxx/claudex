@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-04
+
+First public release.
+
 ### Added
+- **2 new menu bar icon styles** — `Segments` (5 vertical bars filling
+  left-to-right, cellular-signal style) and `DualBar` (two stacked horizontal
+  bars: session on top, weekly below).
+- **In-app help for missing RTK / MemPalace** — when a binary is not
+  auto-detected, the wizard shows a one-line description, a link to the
+  install page and a "Copy install command" button.
+- **Precise reset countdowns** — values under 2 hours show `1h 24min` /
+  `47min` instead of the rounded `1 hr` / `47 min`.
+- **In-app update checker** (`UpdateChecker`). Pings GitHub Releases at launch
+  (silently, ≤ 1 / 24 h) and on demand from Settings → About. Shows an alert
+  with "Open Release Page" / "Copy Brew Command" / "Skip This Version".
+- **Launch-at-login** toggle in Settings → General, backed by `SMAppService`.
 - Embedded `WKWebView` Claude sign-in flow (`ClaudeWebLogin`). Captures the
   `sessionKey` cookie on successful login and saves it to Keychain. Manual
   paste fallback kept under a disclosure group.

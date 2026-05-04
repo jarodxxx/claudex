@@ -75,14 +75,23 @@ final class StatusBarController {
         case 75..<90: status = .warning
         default: status = .critical
         }
-        renderIcon(percent: percent, status: status)
+
+        // Dual Bar style needs both session and weekly. For other styles the
+        // secondary value is ignored.
+        var secondary: Int? = nil
+        if case let .success(usage)? = stats.claude {
+            secondary = Int(usage.weeklyUsage.utilization.rounded())
+        }
+
+        renderIcon(percent: percent, status: status, secondary: secondary)
     }
 
-    private func renderIcon(percent: Int, status: UsageStatus) {
+    private func renderIcon(percent: Int, status: UsageStatus, secondary: Int? = nil) {
         statusItem.button?.image = StatusBarIcon.image(
             style: AppSettings.iconStyle,
             percent: percent,
-            status: status
+            status: status,
+            secondaryPercent: secondary
         )
     }
 

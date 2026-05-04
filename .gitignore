@@ -2,7 +2,7 @@
 .workfiles/
 
 # --- Claude Code paramètres locaux (privés au dev) ---
-.claude/settings.local.json
+.claude/
 
 # --- macOS ---
 .DS_Store

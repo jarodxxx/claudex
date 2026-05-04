@@ -6,6 +6,7 @@ struct GeneralSettingsView: View {
     @State private var refreshInterval: TimeInterval = AppSettings.refreshIntervalSeconds
     @State private var showSonnet: Bool = AppSettings.showSonnet
     @State private var iconStyle: IconStyle = AppSettings.iconStyle
+    @State private var launchAtLogin: Bool = LaunchAtLogin.isEnabled
     @State private var rtkPath: String = AppSettings.rtkBinaryPath ?? ProcessLocator.locate("rtk") ?? ""
     @State private var memPalacePath: String = AppSettings.memPalaceBinaryPath ?? ProcessLocator.locate("mempalace") ?? ""
 
@@ -18,11 +19,32 @@ struct GeneralSettingsView: View {
             VStack(alignment: .leading, spacing: 18) {
                 claudeSection
                 refreshSection
+                startupSection
                 displaySection
                 rtkSection
                 memPalaceSection
             }
             .padding(.bottom, 12)
+        }
+    }
+
+    // MARK: - Startup
+
+    private var startupSection: some View {
+        SettingsCard(title: "Startup") {
+            Toggle("Launch Claudex at login", isOn: $launchAtLogin)
+                .toggleStyle(.switch)
+                .onChange(of: launchAtLogin) { _, newValue in
+                    let ok = LaunchAtLogin.setEnabled(newValue)
+                    if !ok {
+                        // Revert the toggle if SMAppService rejected the change
+                        // (typically the user denied in System Settings).
+                        launchAtLogin = LaunchAtLogin.isEnabled
+                    }
+                }
+            Text("Claudex re-opens automatically each time you log in to macOS.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 

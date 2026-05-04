@@ -15,6 +15,10 @@ enum AppSettings {
         static let warningThreshold = "warningThreshold"
         static let criticalThreshold = "criticalThreshold"
         static let notifyOnSessionReset = "notifyOnSessionReset"
+        static let checkForUpdatesAutomatically = "checkForUpdatesAutomatically"
+        static let lastUpdateCheckTimestamp = "lastUpdateCheckTimestamp"
+        static let dismissedUpdateVersion = "dismissedUpdateVersion"
+        static let launchAtLogin = "launchAtLogin"
     }
 
     static var rtkBinaryPath: String? {
@@ -96,6 +100,33 @@ enum AppSettings {
             return defaults.bool(forKey: Key.notifyOnSessionReset)
         }
         set { defaults.set(newValue, forKey: Key.notifyOnSessionReset) }
+    }
+
+    /// Whether the app pings GitHub Releases at launch + once / 24 h.
+    static var checkForUpdatesAutomatically: Bool {
+        get {
+            if defaults.object(forKey: Key.checkForUpdatesAutomatically) == nil { return true }
+            return defaults.bool(forKey: Key.checkForUpdatesAutomatically)
+        }
+        set { defaults.set(newValue, forKey: Key.checkForUpdatesAutomatically) }
+    }
+
+    static var lastUpdateCheckTimestamp: TimeInterval {
+        get { defaults.double(forKey: Key.lastUpdateCheckTimestamp) }
+        set { defaults.set(newValue, forKey: Key.lastUpdateCheckTimestamp) }
+    }
+
+    /// If the user clicks "Skip This Version" we record the version string so
+    /// we don't prompt again for it.
+    static var dismissedUpdateVersion: String? {
+        get { defaults.string(forKey: Key.dismissedUpdateVersion) }
+        set { defaults.set(newValue, forKey: Key.dismissedUpdateVersion) }
+    }
+
+    /// Toggled from Settings → General. Persisted via SMAppService.
+    static var launchAtLogin: Bool {
+        get { defaults.bool(forKey: Key.launchAtLogin) }
+        set { defaults.set(newValue, forKey: Key.launchAtLogin) }
     }
 }
 

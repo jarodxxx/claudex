@@ -2,9 +2,13 @@ import SwiftUI
 import AppKit
 
 struct AboutSettingsView: View {
+    @State private var checkResult: String?
+    @State private var isChecking = false
+    @State private var autoCheck: Bool = AppSettings.checkForUpdatesAutomatically
+
     private var version: String {
         let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "0.1.0"
+        let short = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
         let build = info?["CFBundleVersion"] as? String ?? "1"
         return "Version \(short) (\(build))"
     }
@@ -38,6 +42,42 @@ struct AboutSettingsView: View {
                 Text("© 2026 Avi Teboul · MIT License")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    Button {
+                        isChecking = true
+                        checkResult = nil
+                        Task {
+                            let result = await UpdateChecker.shared.manualCheck()
+                            checkResult = result
+                            isChecking = false
+                        }
+                    } label: {
+                        if isChecking {
+                            HStack { ProgressView().controlSize(.small); Text("Checking…") }
+                        } else {
+                            Label("Check for updates", systemImage: "arrow.down.circle")
+                        }
+                    }
+                    .disabled(isChecking)
+
+                    Toggle("Auto-check daily", isOn: $autoCheck)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                        .onChange(of: autoCheck) { _, v in
+                            AppSettings.checkForUpdatesAutomatically = v
+                        }
+                }
+
+                if let checkResult {
+                    Text(checkResult)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 400)
+                }
             }
 
             HStack(spacing: 12) {

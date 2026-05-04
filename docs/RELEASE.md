@@ -7,8 +7,8 @@ do `brew install --cask jarodxxx/tap/claudex` or download the `.dmg`.
 
 ```bash
 # Bump version in CHANGELOG.md, commit, then:
-git tag v0.1.0
-git push origin v0.1.0
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 GitHub Actions takes over from there:
@@ -81,13 +81,13 @@ of `jarodxxx/homebrew-tap`.
 2. **Commit & push to main**:
    ```bash
    git add CHANGELOG.md
-   git commit -m "Release v0.1.0"
+   git commit -m "Release vX.Y.Z"
    git push
    ```
 3. **Tag and push the tag**:
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   git tag v1.0.0
+   git push origin v1.0.0
    ```
 4. **Watch the workflow**:
    ```bash

@@ -11,14 +11,22 @@ import AppKit
 /// invert nothing — the green/orange/red system colors remain readable on both
 /// light and dark menu bars.
 enum StatusBarIcon {
-    static func image(style: IconStyle, percent: Int, status: UsageStatus) -> NSImage? {
+    static func image(
+        style: IconStyle,
+        percent: Int,
+        status: UsageStatus,
+        secondaryPercent: Int? = nil
+    ) -> NSImage? {
         let p = max(0, min(100, percent))
+        let secondary = secondaryPercent.map { max(0, min(100, $0)) }
         let img: NSImage?
         switch style {
         case .gauge:    img = gaugeImage(percent: p)
         case .minimal:  img = minimalImage(percent: p)
         case .circular: img = circularImage(percent: p)
         case .battery:  img = batteryImage(percent: p)
+        case .segments: img = segmentsImage(percent: p)
+        case .dualBar:  img = dualBarImage(primary: p, secondary: secondary ?? p)
         }
         // Template = false: we want our colors preserved.
         img?.isTemplate = false
@@ -209,6 +217,107 @@ enum StatusBarIcon {
         attr.draw(at: NSPoint(x: 26, y: 4))
 
         return img
+    }
+
+    // MARK: - Segments (5 vertical bars filling left-to-right)
+
+    private static func segmentsImage(percent: Int) -> NSImage {
+        let size = NSSize(width: 24, height: 18)
+        let img = NSImage(size: size)
+        img.lockFocus()
+        defer { img.unlockFocus() }
+
+        let segmentCount = 5
+        let segmentWidth: CGFloat = 3
+        let segmentSpacing: CGFloat = 1.5
+        let baseY: CGFloat = 3
+        let maxHeight: CGFloat = 12
+
+        // Number of segments to fill (rounded up so even 1% lights one segment)
+        let filled = percent == 0 ? 0 : max(1, Int(ceil(Double(percent) / 100.0 * Double(segmentCount))))
+        let tint = color(for: percent)
+
+        let totalWidth = CGFloat(segmentCount) * segmentWidth + CGFloat(segmentCount - 1) * segmentSpacing
+        let startX = (size.width - totalWidth) / 2
+
+        for i in 0..<segmentCount {
+            // Bars grow taller left-to-right (cellular signal style)
+            let height = maxHeight * CGFloat(i + 1) / CGFloat(segmentCount)
+            let rect = NSRect(
+                x: startX + CGFloat(i) * (segmentWidth + segmentSpacing),
+                y: baseY,
+                width: segmentWidth,
+                height: height
+            )
+            let path = NSBezierPath(roundedRect: rect, xRadius: 0.8, yRadius: 0.8)
+            if i < filled {
+                tint.setFill()
+            } else {
+                NSColor.tertiaryLabelColor.withAlphaComponent(0.3).setFill()
+            }
+            path.fill()
+        }
+
+        return img
+    }
+
+    // MARK: - Dual Bar (two stacked horizontal bars)
+
+    private static func dualBarImage(primary: Int, secondary: Int) -> NSImage {
+        let size = NSSize(width: 32, height: 18)
+        let img = NSImage(size: size)
+        img.lockFocus()
+        defer { img.unlockFocus() }
+
+        let barWidth: CGFloat = 26
+        let barHeight: CGFloat = 4
+        let spacing: CGFloat = 2
+        let totalHeight = barHeight * 2 + spacing
+        let startX: CGFloat = 3
+        let startY = (size.height - totalHeight) / 2
+
+        // Top bar = primary (usually session)
+        drawHorizontalBar(
+            x: startX,
+            y: startY + barHeight + spacing,
+            width: barWidth,
+            height: barHeight,
+            percent: primary,
+            tint: color(for: primary)
+        )
+
+        // Bottom bar = secondary (usually weekly)
+        drawHorizontalBar(
+            x: startX,
+            y: startY,
+            width: barWidth,
+            height: barHeight,
+            percent: secondary,
+            tint: color(for: secondary)
+        )
+
+        return img
+    }
+
+    private static func drawHorizontalBar(
+        x: CGFloat, y: CGFloat,
+        width: CGFloat, height: CGFloat,
+        percent: Int,
+        tint: NSColor
+    ) {
+        // Track
+        let trackRect = NSRect(x: x, y: y, width: width, height: height)
+        let track = NSBezierPath(roundedRect: trackRect, xRadius: height / 2, yRadius: height / 2)
+        NSColor.tertiaryLabelColor.withAlphaComponent(0.3).setFill()
+        track.fill()
+
+        // Fill
+        let fillWidth = width * CGFloat(percent) / 100.0
+        guard fillWidth > 0 else { return }
+        let fillRect = NSRect(x: x, y: y, width: fillWidth, height: height)
+        let fill = NSBezierPath(roundedRect: fillRect, xRadius: height / 2, yRadius: height / 2)
+        tint.setFill()
+        fill.fill()
     }
 
     // MARK: - Drawing helpers

@@ -59,13 +59,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New version (e.g. 0.1.0, no leading v)'
+        description: 'New version (e.g. 1.0.0, no leading v)'
         required: true
       sha256:
         description: 'SHA256 of the .dmg'
         required: true
       tag:
-        description: 'Git tag (e.g. v0.1.0)'
+        description: 'Git tag (e.g. v1.0.0)'
         required: true
 
 permissions:
@@ -104,7 +104,7 @@ git push
 
 ## 5. Test the install
 
-Once `Claudex` v0.1.0 is released and the cask updated:
+Once `Claudex` v1.0.0 is released and the cask updated:
 
 ```bash
 brew install --cask jarodxxx/tap/claudex

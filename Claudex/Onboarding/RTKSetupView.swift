@@ -3,12 +3,18 @@ import SwiftUI
 struct RTKSetupView: View {
     @State private var path: String = AppSettings.rtkBinaryPath ?? ProcessLocator.locate("rtk") ?? ""
 
+    private var isDetected: Bool { !path.isEmpty }
+
     var body: some View {
         GroupBox(label: Label("RTK", systemImage: "bolt.fill")) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Auto-detected via `which rtk`. Override below if needed.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if isDetected {
+                    Text("Auto-detected via `which rtk`. Override below if needed.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    notInstalledHelp
+                }
 
                 HStack {
                     TextField("/usr/local/bin/rtk", text: $path)
@@ -23,7 +29,7 @@ struct RTKSetupView: View {
                     }
                     .disabled(path.isEmpty)
                     Spacer()
-                    if !path.isEmpty {
+                    if isDetected {
                         Label("Detected", systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
@@ -35,6 +41,36 @@ struct RTKSetupView: View {
                 }
             }
             .padding(8)
+        }
+    }
+
+    private var notInstalledHelp: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("RTK is not installed on this Mac. It's a CLI proxy that compresses bash output to save 60–90% of LLM tokens.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 8) {
+                Button {
+                    if let url = URL(string: "https://github.com/rtk-ai/rtk#installation") {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    Label("Install instructions", systemImage: "arrow.up.right.square")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+                Button {
+                    let pasteboard = NSPasteboard.general
+                    pasteboard.clearContents()
+                    pasteboard.setString("brew install rtk", forType: .string)
+                } label: {
+                    Label("Copy `brew install rtk`", systemImage: "doc.on.clipboard")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+            }
         }
     }
 

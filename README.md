@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14.0+-blue.svg)](#requirements)
 [![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-orange.svg)](#requirements)
-[![Status](https://img.shields.io/badge/status-alpha-orange.svg)](#roadmap)
+[![Release](https://img.shields.io/github/v/release/jarodxxx/Claudex?label=release&color=brightgreen)](https://github.com/jarodxxx/Claudex/releases)
 
 </div>
 
@@ -34,8 +34,8 @@ and quietly hides the rest.
 
 - **Live menu bar indicator** — colored gauge that turns green / orange / red as
   the highest of your three quotas climbs
-- **4 menu bar icon styles** — Gauge, Minimal, Circular, Battery (configurable
-  in Settings, with live preview)
+- **6 menu bar icon styles** — Gauge, Minimal, Circular, Battery, Segments,
+  Dual Bar (configurable in Settings, with live preview)
 - **Detailed popover** — per-period progress bars with reset countdowns,
   RTK savings + token counts, MemPalace wing breakdown
 - **Native macOS notifications** — configurable warning/critical thresholds,
@@ -330,18 +330,11 @@ service name and would race in parallel.)
 
 See [docs/xcode-setup.md](docs/xcode-setup.md) for the full Xcode workflow.
 
-## Roadmap
+## Contributing
 
-- [x] Signed + notarized `.dmg` via GitHub Actions on every tag
-- [x] Homebrew Cask (`brew install --cask jarodxxx/tap/claudex`)
-- [ ] Auto-launch at login toggle
-- [ ] More menu bar icon styles (Segments, Dual Bar)
-- [ ] In-app onboarding for first-time RTK / MemPalace setup
-- [ ] Localization (FR, EN, …)
-- [ ] App Sandbox + Mac App Store distribution
-
-Contributions welcome — please open an issue first if it's a non-trivial
-change. See [docs/RELEASE.md](docs/RELEASE.md) for the release process.
+Ideas and bug reports → [GitHub Issues](https://github.com/jarodxxx/Claudex/issues).
+PRs welcome — please open an issue first if it's a non-trivial change.
+See [docs/RELEASE.md](docs/RELEASE.md) for the release process.
 
 ## Disclaimer
 

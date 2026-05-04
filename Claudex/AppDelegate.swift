@@ -32,6 +32,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         } else {
             refreshScheduler?.start()
         }
+
+        // Background update check (silent if up to date or already checked
+        // in the last 24 h). Delayed 5 s so the menu bar icon is visible
+        // before any alert pops up.
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            await UpdateChecker.shared.checkAtLaunchIfDue()
+        }
     }
 
     nonisolated func userNotificationCenter(

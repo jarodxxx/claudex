@@ -127,6 +127,24 @@ private struct ClaudeUsageRow: View {
     }
 
     private func relativeReset(_ date: Date) -> String {
+        let delta = date.timeIntervalSinceNow
+
+        // Already past: about to reset
+        if delta < 60 { return "imminent" }
+
+        // Under 2 hours: precise "1h 24min" / "47min" so the user knows
+        // exactly how much they have left.
+        if delta < 2 * 3600 {
+            let totalMinutes = Int(delta / 60)
+            let hours = totalMinutes / 60
+            let minutes = totalMinutes % 60
+            if hours > 0 {
+                return minutes == 0 ? "in \(hours)h" : "in \(hours)h \(minutes)min"
+            }
+            return "in \(minutes)min"
+        }
+
+        // 2 hours or more: locale-aware relative format ("in 4 hr", "in 2 days")
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
