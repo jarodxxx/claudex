@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-05-04
+
+### Changed
+- **Menu bar icon now reflects the most imminent quota**, not the highest %.
+  We pick the quota whose `resets_at` is closest in time (typically the
+  5-hour session) so the icon shows what will actually constrain the next
+  few hours of usage. Previously a Weekly at 63 % shadowed a Session at
+  26 %; now Session at 26 % drives the icon because it resets sooner.
+
 ## [1.0.1] - 2026-05-04
 
 ### Fixed

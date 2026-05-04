@@ -68,9 +68,9 @@ final class StatusBarController {
     }
 
     private func updateIcon(with stats: AggregatedStats) {
-        let percent = Int(stats.maxUtilization.rounded())
+        let percent = Int(stats.iconUtilization.rounded())
         let status: UsageStatus
-        switch stats.maxUtilization {
+        switch stats.iconUtilization {
         case ..<75: status = .ok
         case 75..<90: status = .warning
         default: status = .critical
