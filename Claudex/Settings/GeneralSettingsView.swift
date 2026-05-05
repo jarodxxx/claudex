@@ -2,13 +2,13 @@ import SwiftUI
 import AppKit
 
 struct GeneralSettingsView: View {
+    @ObservedObject private var registry = ToolRegistry.shared
+
     @State private var refreshTick = 0
     @State private var refreshInterval: TimeInterval = AppSettings.refreshIntervalSeconds
     @State private var showSonnet: Bool = AppSettings.showSonnet
     @State private var iconStyle: IconStyle = AppSettings.iconStyle
     @State private var launchAtLogin: Bool = LaunchAtLogin.isEnabled
-    @State private var rtkPath: String = AppSettings.rtkBinaryPath ?? ProcessLocator.locate("rtk") ?? ""
-    @State private var memPalacePath: String = AppSettings.memPalaceBinaryPath ?? ProcessLocator.locate("mempalace") ?? ""
 
     private static let intervals: [(label: String, seconds: TimeInterval)] = [
         ("1 minute", 60), ("5 minutes", 300), ("15 minutes", 900), ("30 minutes", 1800),
@@ -21,8 +21,7 @@ struct GeneralSettingsView: View {
                 refreshSection
                 startupSection
                 displaySection
-                rtkSection
-                memPalaceSection
+                toolsSection
             }
             .padding(.bottom, 12)
         }
@@ -114,55 +113,38 @@ struct GeneralSettingsView: View {
         }
     }
 
-    // MARK: - RTK
+    // MARK: - Tools toggle
 
-    private var rtkSection: some View {
-        SettingsCard(title: "RTK") {
-            Text("Path to the `rtk` binary. Auto-detected via `which rtk`.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            HStack {
-                TextField("/opt/homebrew/bin/rtk", text: $rtkPath)
-                    .textFieldStyle(.roundedBorder)
-                Button("Choose…") { pickBinary(into: $rtkPath) }
-                Button("Save") {
-                    AppSettings.rtkBinaryPath = rtkPath.isEmpty ? nil : rtkPath
-                    NotificationCenter.default.post(name: .claudexShouldRefresh, object: nil)
+    private var toolsSection: some View {
+        SettingsCard(title: "Tools") {
+            Text("Choose which tools appear in the popover. At least one must stay enabled.")
+                .font(.caption).foregroundStyle(.secondary)
+
+            ForEach(ToolCategory.allCases) { cat in
+                let catTools = ToolID.allCases.filter { $0.definition.category == cat }
+                if !catTools.isEmpty {
+                    Text(cat.rawValue).font(.caption.bold()).foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                    ForEach(catTools) { toolID in
+                        let def = toolID.definition
+                        HStack {
+                            Image(systemName: def.icon).frame(width: 18)
+                            Text(def.name)
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { registry.isEnabled(toolID) },
+                                set: { registry.setEnabled(toolID, $0) }
+                            ))
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                        }
+                        .font(.subheadline)
+                    }
                 }
-                .disabled(rtkPath.isEmpty)
             }
         }
     }
 
-    // MARK: - MemPalace
-
-    private var memPalaceSection: some View {
-        SettingsCard(title: "MemPalace") {
-            Text("Path to the `mempalace` binary. Auto-detected via `which mempalace`.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            HStack {
-                TextField("/opt/homebrew/bin/mempalace", text: $memPalacePath)
-                    .textFieldStyle(.roundedBorder)
-                Button("Choose…") { pickBinary(into: $memPalacePath) }
-                Button("Save") {
-                    AppSettings.memPalaceBinaryPath = memPalacePath.isEmpty ? nil : memPalacePath
-                    NotificationCenter.default.post(name: .claudexShouldRefresh, object: nil)
-                }
-                .disabled(memPalacePath.isEmpty)
-            }
-        }
-    }
-
-    private func pickBinary(into binding: Binding<String>) {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url {
-            binding.wrappedValue = url.path
-        }
-    }
 }
 
 struct SettingsCard<Content: View>: View {

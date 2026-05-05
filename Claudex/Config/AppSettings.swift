@@ -6,6 +6,7 @@ enum AppSettings {
     enum Key {
         static let rtkBinaryPath = "rtkBinaryPath"
         static let memPalaceBinaryPath = "memPalaceBinaryPath"
+        static let claudeBinaryPath = "claudeBinaryPath"
         static let refreshIntervalSeconds = "refreshIntervalSeconds"
         static let onboardingCompleted = "onboardingCompleted"
         static let claudeOrgUUID = "claudeOrgUUID"
@@ -19,6 +20,21 @@ enum AppSettings {
         static let lastUpdateCheckTimestamp = "lastUpdateCheckTimestamp"
         static let dismissedUpdateVersion = "dismissedUpdateVersion"
         static let launchAtLogin = "launchAtLogin"
+    }
+
+    static var claudeBinaryPath: String? {
+        get { defaults.string(forKey: Key.claudeBinaryPath) }
+        set { defaults.set(newValue, forKey: Key.claudeBinaryPath) }
+    }
+
+    static let defaultClaudeProjectsPath: String = {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".claude/projects").path
+    }()
+
+    static var claudeProjectsPath: String {
+        get { defaults.string(forKey: "claudeProjectsPath") ?? defaultClaudeProjectsPath }
+        set { defaults.set(newValue, forKey: "claudeProjectsPath") }
     }
 
     static var rtkBinaryPath: String? {

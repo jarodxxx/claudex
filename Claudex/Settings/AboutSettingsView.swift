@@ -8,7 +8,7 @@ struct AboutSettingsView: View {
 
     private var version: String {
         let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        let short = info?["CFBundleShortVersionString"] as? String ?? "2.0.0"
         let build = info?["CFBundleVersion"] as? String ?? "1"
         return "Version \(short) (\(build))"
     }
@@ -36,7 +36,7 @@ struct AboutSettingsView: View {
             }
 
             VStack(spacing: 4) {
-                Text("Aggregate Claude.ai, RTK and mempalace usage in your menu bar.")
+                Text("Your AI dev tools, unified in the menu bar.")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
                 Text("© 2026 Avi Teboul · MIT License")

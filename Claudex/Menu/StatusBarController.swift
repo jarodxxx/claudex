@@ -19,6 +19,7 @@ final class StatusBarController {
         self.popover.contentViewController = NSHostingController(
             rootView: DropdownView(
                 aggregator: aggregator,
+                registry: ToolRegistry.shared,
                 openSettings: openSettings,
                 onRefresh: { Task { await aggregator.refresh() } }
             )

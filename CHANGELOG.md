@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-05-05
+
+### Added
+- **Modular tool architecture** (`Tools/ToolDefinition`, `Tools/ToolRegistry`). Each
+  tool is now a first-class `ToolID` with name, icon, category, and estimated
+  popover height. Tools can be enabled/disabled from Settings → General → Tools.
+  The registry auto-injects category headers once the combined height exceeds 500 pt.
+- **Caveman integration** — reads Claude Code session JSONL files from
+  `~/.claude/projects/` (last 24 h) and surfaces input/output token volumes
+  and the output ratio (a proxy for response compression). No binary required.
+- **Settings → Tools tab** — binary paths for RTK and MemPalace, plus Caveman
+  session-folder configuration (custom or default `~/.claude/projects`).
+- **ProcessLocator extended PATH** — now probes `/opt/homebrew/bin`,
+  `~/.local/bin`, `~/.cargo/bin` etc. directly before falling back to `which`,
+  so binaries installed outside the system PATH are auto-detected.
+
+### Changed
+- Settings is now a 4-tab window: General / Tools / Notifications / About.
+- Settings → General no longer contains binary paths (moved to Tools).
+- About tagline: "Your AI dev tools, unified in the menu bar."
+- Popover sections are hidden when a tool is not configured (no binary, no data).
+
 ## [1.0.2] - 2026-05-04
 
 ### Changed

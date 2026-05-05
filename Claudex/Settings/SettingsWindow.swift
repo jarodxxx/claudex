@@ -60,12 +60,14 @@ private struct SettingsRootView: View {
         TabView {
             GeneralSettingsView()
                 .tabItem { Label("General", systemImage: "gearshape") }
+            ToolsSettingsView()
+                .tabItem { Label("Tools", systemImage: "wrench.and.screwdriver") }
             NotificationsSettingsView()
                 .tabItem { Label("Notifications", systemImage: "bell") }
             AboutSettingsView()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
         .padding(20)
-        .frame(width: 560, height: 620)
+        .frame(width: 560, height: 640)
     }
 }
