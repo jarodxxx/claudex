@@ -5,6 +5,9 @@ struct AboutSettingsView: View {
     @State private var checkResult: String?
     @State private var isChecking = false
     @State private var autoCheck: Bool = AppSettings.checkForUpdatesAutomatically
+    @State private var installMethod: String? = AppSettings.updateMethod
+
+    private var checker: UpdateChecker { UpdateChecker.shared }
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -44,6 +47,10 @@ struct AboutSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            if let release = checker.availableRelease {
+                updateBanner(release: release)
+            }
+
             VStack(spacing: 8) {
                 HStack(spacing: 12) {
                     Button {
@@ -61,7 +68,7 @@ struct AboutSettingsView: View {
                             Label("Check for updates", systemImage: "arrow.down.circle")
                         }
                     }
-                    .disabled(isChecking)
+                    .disabled(isChecking || checker.isUpdating)
 
                     Toggle("Auto-check daily", isOn: $autoCheck)
                         .toggleStyle(.switch)
@@ -79,6 +86,8 @@ struct AboutSettingsView: View {
                         .frame(maxWidth: 400)
                 }
             }
+
+            installMethodRow
 
             HStack(spacing: 12) {
                 Button {
@@ -105,5 +114,64 @@ struct AboutSettingsView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: checker.isUpdating) { _, updating in
+            if !updating { installMethod = AppSettings.updateMethod }
+        }
+    }
+
+    // MARK: - Update Banner
+
+    @ViewBuilder
+    private func updateBanner(release: GitHubRelease) -> some View {
+        VStack(spacing: 6) {
+            Text("Version \(release.tagName) is available")
+                .font(.subheadline.bold())
+            Button {
+                Task {
+                    await UpdateChecker.shared.performUpdate(release: release)
+                    installMethod = AppSettings.updateMethod
+                }
+            } label: {
+                if checker.isUpdating {
+                    HStack {
+                        ProgressView().controlSize(.small)
+                        Text("Updating…")
+                    }
+                } else {
+                    Label("Update Now", systemImage: "arrow.down.circle.fill")
+                }
+            }
+            .disabled(checker.isUpdating)
+            .controlSize(.large)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.accentColor.opacity(0.1))
+        )
+    }
+
+    // MARK: - Install Method Row
+
+    private var installMethodRow: some View {
+        HStack(spacing: 6) {
+            if let method = installMethod {
+                let label = method == "homebrew" ? "Homebrew" : "Manual Download"
+                Text("Install method: \(label)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button("Reset") {
+                    AppSettings.updateMethod = nil
+                    installMethod = nil
+                }
+                .font(.caption)
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+            } else {
+                Text("Install method: not yet set")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }

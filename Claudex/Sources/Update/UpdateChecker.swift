@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import Observation
 
 struct GitHubRelease: Codable {
     let tagName: String
@@ -19,15 +20,12 @@ struct GitHubRelease: Codable {
     }
 }
 
-/// Polls GitHub Releases for newer Claudex versions and prompts the user when
-/// one is available. Two ways to trigger:
+/// Polls GitHub Releases for newer Claudex versions and lets the user update
+/// in-app (Homebrew) or via the release page (manual install).
 ///
-///   * Automatic: once at app launch, then at most once every 24 h
-///   * Manual: from Settings → About → "Check for updates now"
-///
-/// Users can dismiss a specific version (it won't re-prompt for that exact
-/// version) or disable the automatic check entirely.
+/// Install method is asked once on first update and stored in AppSettings.
 @MainActor
+@Observable
 final class UpdateChecker {
     static let shared = UpdateChecker()
 
@@ -36,12 +34,15 @@ final class UpdateChecker {
     )!
     private static let minimumIntervalBetweenAutoChecks: TimeInterval = 24 * 60 * 60
 
+    /// Most recent release newer than current build. Observed by AboutSettingsView.
+    var availableRelease: GitHubRelease? = nil
+    /// True while brew upgrade is running.
+    var isUpdating: Bool = false
+
     var currentVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }
 
-    /// Run an automatic check at startup if enabled and not already checked
-    /// in the last 24 h.
     func checkAtLaunchIfDue() async {
         guard AppSettings.checkForUpdatesAutomatically else { return }
 
@@ -52,14 +53,15 @@ final class UpdateChecker {
         AppSettings.lastUpdateCheckTimestamp = now
 
         guard let release = await fetchLatest() else { return }
-        guard isNewer(release.version, than: currentVersion) else { return }
+        guard isNewer(release.version, than: currentVersion) else {
+            availableRelease = nil
+            return
+        }
+        availableRelease = release
         if AppSettings.dismissedUpdateVersion == release.version { return }
-
         presentUpdateAlert(release: release, automatic: true)
     }
 
-    /// Manual "Check for updates now" — always shows the result, even if up to
-    /// date or on error. Returns a human-readable status string.
     func manualCheck() async -> String {
         AppSettings.lastUpdateCheckTimestamp = Date().timeIntervalSince1970
 
@@ -68,13 +70,95 @@ final class UpdateChecker {
         }
 
         if !isNewer(release.version, than: currentVersion) {
+            availableRelease = nil
             return "You're up to date — Claudex \(currentVersion) is the latest version."
         }
 
-        // Reset dismissal when the user explicitly checks
+        availableRelease = release
         AppSettings.dismissedUpdateVersion = nil
         presentUpdateAlert(release: release, automatic: false)
         return "Update found: \(release.tagName)."
+    }
+
+    // MARK: - Update
+
+    func performUpdate(release: GitHubRelease) async {
+        let method: String
+        if let saved = AppSettings.updateMethod {
+            method = saved
+        } else {
+            method = askAndSaveInstallMethod()
+        }
+
+        if method == "homebrew" {
+            await performBrewUpdate(release: release)
+        } else {
+            performManualUpdate(release: release)
+        }
+    }
+
+    private func askAndSaveInstallMethod() -> String {
+        let alert = NSAlert()
+        alert.messageText = "How did you install Claudex?"
+        alert.informativeText = "This is asked once — you can change it later in Settings → About."
+        alert.addButton(withTitle: "Homebrew")
+        alert.addButton(withTitle: "Manual Download")
+        let method = alert.runModal() == .alertFirstButtonReturn ? "homebrew" : "manual"
+        AppSettings.updateMethod = method
+        return method
+    }
+
+    private func detectedBrewPath() -> String? {
+        ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+            .first { FileManager.default.isExecutableFile(atPath: $0) }
+    }
+
+    private func performBrewUpdate(release: GitHubRelease) async {
+        guard let brewPath = detectedBrewPath() else {
+            AppSettings.updateMethod = "manual"
+            let alert = NSAlert()
+            alert.messageText = "Homebrew not found"
+            alert.informativeText = """
+                brew was not found at /opt/homebrew/bin/brew or /usr/local/bin/brew.
+                Your install method has been switched to Manual.
+                """
+            alert.addButton(withTitle: "Open Release Page")
+            alert.addButton(withTitle: "Close")
+            if alert.runModal() == .alertFirstButtonReturn {
+                performManualUpdate(release: release)
+            }
+            return
+        }
+
+        isUpdating = true
+        let result = await CommandRunner.shared.runWithNotification(
+            title: "Updating Claudex",
+            executable: brewPath,
+            arguments: ["upgrade", "--cask", "claudex"]
+        )
+        isUpdating = false
+
+        let output = [result.stdout, result.stderr]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+
+        if result.succeeded {
+            CommandOutputWindow.showWithRelaunch(
+                title: "Claudex Updated — \(release.tagName)",
+                output: output.isEmpty ? "brew upgrade completed successfully." : output
+            )
+        } else {
+            CommandOutputWindow.show(
+                title: "Update Failed",
+                output: output.isEmpty ? "brew upgrade exited with code \(result.exitCode)." : output
+            )
+        }
+    }
+
+    private func performManualUpdate(release: GitHubRelease) {
+        if let url = URL(string: release.htmlUrl) {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     // MARK: - Networking
@@ -124,13 +208,11 @@ final class UpdateChecker {
         let alert = NSAlert()
         alert.messageText = "Claudex \(release.tagName) is available"
         alert.informativeText = """
-            You're running version \(currentVersion). The latest release on GitHub is \(release.tagName).
-
-            If you installed Claudex via Homebrew, just run `brew upgrade --cask claudex`.
-            Otherwise, open the release page to grab the new .dmg.
+            You're running version \(currentVersion). \
+            Version \(release.tagName) is available on GitHub.
             """
+        alert.addButton(withTitle: "Update Now")
         alert.addButton(withTitle: "Open Release Page")
-        alert.addButton(withTitle: "Copy Brew Command")
         if automatic {
             alert.addButton(withTitle: "Skip This Version")
         } else {
@@ -140,20 +222,10 @@ final class UpdateChecker {
         let response = alert.runModal()
         switch response {
         case .alertFirstButtonReturn:
-            if let url = URL(string: release.htmlUrl) {
-                NSWorkspace.shared.open(url)
-            }
+            Task { await performUpdate(release: release) }
         case .alertSecondButtonReturn:
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setString("brew upgrade --cask claudex", forType: .string)
-            // Soft confirmation
-            let copied = NSAlert()
-            copied.messageText = "Copied to clipboard"
-            copied.informativeText = "Open Terminal and paste:\n\nbrew upgrade --cask claudex"
-            copied.runModal()
+            performManualUpdate(release: release)
         case .alertThirdButtonReturn where automatic:
-            // "Skip This Version" — don't prompt again for this exact version
             AppSettings.dismissedUpdateVersion = release.version
         default:
             break

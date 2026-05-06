@@ -20,6 +20,7 @@ enum AppSettings {
         static let lastUpdateCheckTimestamp = "lastUpdateCheckTimestamp"
         static let dismissedUpdateVersion = "dismissedUpdateVersion"
         static let launchAtLogin = "launchAtLogin"
+        static let updateMethod = "updateMethod"
     }
 
     static var claudeBinaryPath: String? {
@@ -143,6 +144,12 @@ enum AppSettings {
     static var launchAtLogin: Bool {
         get { defaults.bool(forKey: Key.launchAtLogin) }
         set { defaults.set(newValue, forKey: Key.launchAtLogin) }
+    }
+
+    /// "homebrew" or "manual" — nil means not yet asked.
+    static var updateMethod: String? {
+        get { defaults.string(forKey: Key.updateMethod) }
+        set { defaults.set(newValue, forKey: Key.updateMethod) }
     }
 }
 

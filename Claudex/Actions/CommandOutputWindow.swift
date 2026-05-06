@@ -13,8 +13,14 @@ final class CommandOutputWindow {
         openWindows.append(instance)
     }
 
-    private init(title: String, output: String) {
-        let view = CommandOutputView(title: title, output: output)
+    static func showWithRelaunch(title: String, output: String) {
+        let instance = CommandOutputWindow(title: title, output: output, showRelaunch: true)
+        instance.present()
+        openWindows.append(instance)
+    }
+
+    private init(title: String, output: String, showRelaunch: Bool = false) {
+        let view = CommandOutputView(title: title, output: output, showRelaunch: showRelaunch)
         let hostingController = NSHostingController(rootView: view)
         let window = NSWindow(contentViewController: hostingController)
         window.title = title
@@ -34,6 +40,7 @@ final class CommandOutputWindow {
 private struct CommandOutputView: View {
     let title: String
     let output: String
+    var showRelaunch: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -53,8 +60,23 @@ private struct CommandOutputView: View {
                     NSApp.keyWindow?.close()
                 }
                 .keyboardShortcut(.cancelAction)
+
+                if showRelaunch {
+                    Button("Relaunch") {
+                        relaunch()
+                    }
+                    .keyboardShortcut(.defaultAction)
+                }
             }
         }
         .padding(16)
+    }
+
+    private func relaunch() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        task.arguments = [Bundle.main.bundlePath]
+        try? task.run()
+        NSApp.terminate(nil)
     }
 }

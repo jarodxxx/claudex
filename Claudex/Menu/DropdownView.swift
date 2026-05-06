@@ -51,10 +51,8 @@ struct DropdownView: View {
 
     @ViewBuilder
     private var flatContent: some View {
-        let sections = toolSections
-        ForEach(Array(sections.enumerated()), id: \.offset) { idx, section in
+        ForEach(Array(toolSections.enumerated()), id: \.offset) { _, section in
             section
-            if idx < sections.count - 1 { Divider() }
         }
     }
 
@@ -63,7 +61,6 @@ struct DropdownView: View {
         let grouped = Dictionary(grouping: registry.enabled, by: \.category)
         let categories = ToolCategory.allCases.filter { grouped[$0] != nil }
         ForEach(Array(categories.enumerated()), id: \.element) { idx, cat in
-            // Category header
             HStack {
                 Image(systemName: cat.icon)
                 Text(cat.rawValue.uppercased())
@@ -72,13 +69,10 @@ struct DropdownView: View {
             .foregroundStyle(.secondary)
             .padding(.top, idx == 0 ? 0 : 6)
 
-            // Tools in this category
             let tools = grouped[cat] ?? []
-            ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
+            ForEach(tools, id: \.id) { tool in
                 toolView(for: tool.id)
-                if i < tools.count - 1 { Divider().padding(.leading, 8) }
             }
-            if idx < categories.count - 1 { Divider() }
         }
     }
 
@@ -94,27 +88,45 @@ struct DropdownView: View {
     private func toolView(for id: ToolID) -> some View {
         switch id {
         case .claude:
-            // Always show when enabled — result nil = not yet fetched or not configured
             ClaudeSection(result: aggregator.stats.claude, showSonnet: AppSettings.showSonnet)
+                .toolCard()
         case .rtk:
-            // Hide only if no binary at all (never detected, user didn't configure)
             if aggregator.stats.rtk != nil || ServiceConfig.current.rtkBinaryPath != nil {
                 RTKSection(result: aggregator.stats.rtk)
+                    .toolCard()
             }
         case .caveman:
-            // Hide only if no sessions found (reader uses JSONL, no binary required)
             if aggregator.stats.caveman != nil {
                 CavemanSection(result: aggregator.stats.caveman)
+                    .toolCard()
             }
         case .mempalace:
             if aggregator.stats.memPalace != nil || ServiceConfig.current.memPalaceBinaryPath != nil {
                 MemPalaceSection(result: aggregator.stats.memPalace)
+                    .toolCard()
             }
         }
     }
 }
 
 // MARK: - Shared components
+
+private extension View {
+    func toolCard() -> some View {
+        self
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color(NSColor.windowBackgroundColor))
+                    .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 1.5)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.secondary.opacity(0.18), lineWidth: 0.5)
+            )
+    }
+}
 
 private struct ToolbarButton: View {
     let systemImage: String
@@ -265,33 +277,125 @@ private struct CavemanSection: View {
             case .failure(let e):
                 Text("Error: \(String(describing: e))").foregroundStyle(.red).font(.caption)
             case .success(let s):
-                VStack(alignment: .leading, spacing: 6) {
-                    // compression ratio bar (output/input — lower is terser)
-                    let ratio = min(s.compressionRatio * 100, 100)
-                    HStack {
-                        Text("Output ratio")
-                        Spacer()
-                        Text(String(format: "%.0f%%", ratio)).monospacedDigit()
-                    }
-                    .font(.caption)
-                    UsageBar(percent: ratio, color: UsageColor.forSavings(100 - ratio))
+                VStack(alignment: .leading, spacing: 8) {
 
-                    HStack(spacing: 16) {
-                        statTile(value: s.totalInputTokens.formatted(), label: "input (24h)")
-                        statTile(value: s.outputTokens.formatted(), label: "output")
-                        statTile(value: "\(s.sessionCount)", label: "sessions")
+                    // Output ratio bar
+                    let ratio = min(s.compressionRatio * 100, 100)
+                    barRow(label: "Output ratio", percent: ratio,
+                           color: UsageColor.forSavings(100 - ratio))
+
+                    // Cache hit rate bar
+                    if s.cachedTokens > 0 {
+                        let hit = s.cacheHitRate * 100
+                        barRow(label: "Cache hit rate", percent: hit,
+                               color: UsageColor.forSavings(hit))
+                    }
+
+                    Divider()
+
+                    // Cost · model · projects summary
+                    HStack(spacing: 6) {
+                        Label(costLabel(s.estimatedCostUSD), systemImage: "dollarsign.circle")
+                        Spacer()
+                        if let model = s.dominantModel {
+                            Text(shortModel(model))
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Color.secondary.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
+                        Label("\(s.activeProjects)", systemImage: "folder")
                     }
                     .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                    Divider()
+
+                    // Tokens — 4 colonnes séparées par traits fins
+                    sectionLabel("Tokens")
+                    HStack(spacing: 0) {
+                        statTile(value: tok(s.inputTokens),         label: "input")
+                        colDivider()
+                        statTile(value: tok(s.cacheCreationTokens), label: "cache↑")
+                        colDivider()
+                        statTile(value: tok(s.cacheReadTokens),     label: "cache↓")
+                        colDivider()
+                        statTile(value: tok(s.outputTokens),        label: "output")
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+
+                    Divider()
+
+                    // Activity — 3 columns
+                    sectionLabel("Activity")
+                    HStack(spacing: 0) {
+                        statTile(value: "\(s.sessionCount)",  label: "sessions")
+                        statTile(value: tok(s.messageCount),  label: "turns")
+                        statTile(value: tok(s.toolCallCount), label: "tools")
+                    }
                 }
+                .font(.caption)
             }
         }
     }
 
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func barRow(label: String, percent: Double, color: Color) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(String(format: "%.0f%%", percent)).monospacedDigit()
+        }
+        .font(.caption)
+        UsageBar(percent: percent, color: color)
+    }
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .tracking(0.5)
+    }
+
     private func statTile(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(value).font(.callout.bold()).monospacedDigit()
             Text(label).font(.caption2).foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
+    }
+
+    private func colDivider() -> some View {
+        Rectangle()
+            .fill(Color.secondary.opacity(0.2))
+            .frame(width: 0.5)
+            .padding(.vertical, 2)
+    }
+
+    // Format token counts as compact strings: 1 234 → 1.2K, 1 234 567 → 1.2M
+    private func tok(_ n: Int) -> String {
+        switch n {
+        case ..<1_000:         return "\(n)"
+        case ..<1_000_000:     return String(format: "%.1fK", Double(n) / 1_000)
+        case ..<1_000_000_000: return String(format: "%.1fM", Double(n) / 1_000_000)
+        default:               return String(format: "%.1fB", Double(n) / 1_000_000_000)
+        }
+    }
+
+    private func costLabel(_ usd: Double) -> String {
+        if usd < 0.005 { return "<$0.01" }
+        if usd >= 1000  { return String(format: "~$%.0f", usd) }
+        return String(format: "~$%.2f", usd)
+    }
+
+    private func shortModel(_ id: String) -> String {
+        let lower = id.lowercased()
+        if lower.contains("haiku")  { return "Haiku" }
+        if lower.contains("opus")   { return "Opus" }
+        if lower.contains("sonnet") { return "Sonnet" }
+        return id
     }
 }
 
