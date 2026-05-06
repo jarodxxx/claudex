@@ -73,9 +73,13 @@ private struct CommandOutputView: View {
     }
 
     private func relaunch() {
+        // Prefer the standard Homebrew cask install path; fall back to current bundle.
+        let appPath = FileManager.default.fileExists(atPath: "/Applications/Claudex.app")
+            ? "/Applications/Claudex.app"
+            : Bundle.main.bundlePath
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        task.arguments = [Bundle.main.bundlePath]
+        task.arguments = [appPath]
         try? task.run()
         NSApp.terminate(nil)
     }

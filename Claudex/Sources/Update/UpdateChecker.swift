@@ -143,8 +143,12 @@ final class UpdateChecker {
             .joined(separator: "\n")
 
         if result.succeeded {
+            let alreadyInstalled = output.lowercased().contains("already installed")
+            let title = alreadyInstalled
+                ? "Claudex \(release.tagName) is already installed"
+                : "Claudex Updated — \(release.tagName)"
             CommandOutputWindow.showWithRelaunch(
-                title: "Claudex Updated — \(release.tagName)",
+                title: title,
                 output: output.isEmpty ? "brew upgrade completed successfully." : output
             )
         } else {

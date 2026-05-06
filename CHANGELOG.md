@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-05-06
+
+### Fixed
+- **In-app updater — "already installed" case**: when Homebrew already has the
+  latest version installed, the output window now shows "already installed" instead
+  of falsely claiming the update succeeded.
+- **Relaunch after brew upgrade**: the Relaunch button now opens
+  `/Applications/Claudex.app` (the standard Homebrew cask install path) instead of
+  the bundle that triggered the upgrade, so users running a dev build get the correct
+  production binary on relaunch.
+
 ## [2.1.0] - 2026-05-06
 
 ### Added
