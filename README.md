@@ -374,7 +374,7 @@ of any kind.
 
 ## Credits
 
-Claudex stands on the shoulders of three excellent projects:
+Claudex stands on the shoulders of four excellent projects:
 
 - **[ClaudeMeter](https://github.com/eddmann/ClaudeMeter)** by Edd Mann (MIT)
   — the original menu bar app for Claude.ai usage. Claudex re-implements the
