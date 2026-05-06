@@ -4,7 +4,7 @@
 
 # Claudex
 
-**One macOS menu bar, four usage stats: [Claude.ai](https://claude.ai), [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/jarodxxx/caveman), and [MemPalace](https://github.com/mempalace/mempalace).**
+**One macOS menu bar, four usage stats: [Claude.ai](https://claude.ai), [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/juliusbrussee/caveman), and [MemPalace](https://github.com/mempalace/mempalace).**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14.0+-blue.svg)](#requirements)
@@ -22,7 +22,7 @@ you probably already use as a Claude Code power user:
 
 - **Claude.ai** — your 5-hour session, weekly, and Sonnet quotas
 - **[RTK](https://github.com/rtk-ai/rtk)** — token savings from the CLI proxy that compresses your bash output
-- **[Caveman](https://github.com/jarodxxx/caveman)** — token volumes, cache hit rate, cost estimate, and tool call counts read directly from Claude Code session files (no binary required)
+- **[Caveman](https://github.com/juliusbrussee/caveman)** — token volumes, cache hit rate, cost estimate, and tool call counts read directly from Claude Code session files (no binary required)
 - **[MemPalace](https://github.com/mempalace/mempalace)** — drawer/wing counts of your local-first AI memory
 
 One glance at the menu bar tells you where you stand on all three. Open the
@@ -382,7 +382,7 @@ Claudex stands on the shoulders of four excellent projects:
   preserves its `usage.json` schema.
 - **[RTK](https://github.com/rtk-ai/rtk)** by the rtk-ai team (MIT) — the CLI
   proxy whose stats Claudex surfaces.
-- **[Caveman](https://github.com/jarodxxx/caveman)** — the token-compression
+- **[Caveman](https://github.com/juliusbrussee/caveman)** — the token-compression
   mode for Claude Code whose session data Claudex reads and visualises.
 - **[MemPalace](https://github.com/mempalace/mempalace)** by the MemPalace
   team (MIT) — the local-first AI memory whose drawer counts Claudex shows.
