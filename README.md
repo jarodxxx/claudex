@@ -4,7 +4,7 @@
 
 # Claudex
 
-**One macOS menu bar, three usage stats: [Claude.ai](https://claude.ai), [RTK](https://github.com/rtk-ai/rtk), and [MemPalace](https://github.com/mempalace/mempalace).**
+**One macOS menu bar, four usage stats: [Claude.ai](https://claude.ai), [RTK](https://github.com/rtk-ai/rtk), [Caveman](https://github.com/jarodxxx/caveman), and [MemPalace](https://github.com/mempalace/mempalace).**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14.0+-blue.svg)](#requirements)
@@ -22,6 +22,7 @@ you probably already use as a Claude Code power user:
 
 - **Claude.ai** — your 5-hour session, weekly, and Sonnet quotas
 - **[RTK](https://github.com/rtk-ai/rtk)** — token savings from the CLI proxy that compresses your bash output
+- **[Caveman](https://github.com/jarodxxx/caveman)** — token volumes, cache hit rate, cost estimate, and tool call counts read directly from Claude Code session files (no binary required)
 - **[MemPalace](https://github.com/mempalace/mempalace)** — drawer/wing counts of your local-first AI memory
 
 One glance at the menu bar tells you where you stand on all three. Open the
@@ -37,12 +38,16 @@ and quietly hides the rest.
 - **6 menu bar icon styles** — Gauge, Minimal, Circular, Battery, Segments,
   Dual Bar (configurable in Settings, with live preview)
 - **Detailed popover** — per-period progress bars with reset countdowns,
-  RTK savings + token counts, MemPalace wing breakdown
+  RTK savings + token counts, Caveman cache hit rate + cost estimate, MemPalace wing breakdown
+- **Tool cards UI** — each service displayed in its own card with rounded corners
+  and subtle shadow for clear visual separation
 - **Native macOS notifications** — configurable warning/critical thresholds,
   reset alerts
 - **Two sign-in methods for Claude** — embedded WebKit window for
   email/password accounts, or manual paste from DevTools (works with Google
   SSO too)
+- **In-app updater** — "Update Now" button in Settings → About; runs
+  `brew upgrade --cask claudex` directly (or opens the release page for manual installs)
 - **Auto-detect** — `rtk` and `mempalace` binaries are picked up via
   `which` automatically, override with a path picker
 - **Stats export** — writes `~/.claudex/usage.json` after every refresh so
@@ -118,6 +123,10 @@ The first time it runs, an onboarding wizard helps you connect your
 services — see [Configuration](#configuration) below.
 
 **To upgrade** (when a new version is released):
+
+From inside the app: **Settings → About → Update Now** (v2.1.0+).
+
+Or from Terminal:
 ```bash
 brew upgrade --cask claudex
 ```
@@ -286,6 +295,7 @@ Claudex.app
 ├── Sources/
 │   ├── Claude/                claude.ai web API client
 │   ├── RTK/                   shells out to `rtk gain --format json`
+│   ├── Caveman/               reads ~/.claude/projects/**/*.jsonl directly
 │   └── MemPalace/             shells out to `mempalace status`
 ├── Config/                    Keychain (sessionKey), UserDefaults (paths/prefs)
 ├── Settings/                  General / Notifications / About tabs

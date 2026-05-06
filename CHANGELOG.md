@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-05-06
+
+### Added
+- **In-app updater** — "Update Now" button in the update alert and in Settings → About.
+  On first use, Claudex asks how it was installed (Homebrew or manual download) and
+  remembers the answer. Homebrew path runs `brew upgrade --cask claudex` in the
+  background and shows live output in a window with a "Relaunch" button on success.
+  Manual path opens the GitHub release page. Install method can be reset at any time
+  from Settings → About.
+- **Caveman extended stats** — the Caveman section now surfaces 8 additional metrics
+  parsed from Claude Code session JSONL files:
+  - Cache creation vs. cache read tokens (split from the previously merged `cachedTokens`)
+  - Cache hit rate progress bar
+  - Message count (individual assistant turns, not just file count)
+  - Tool call count (`tool_use` content blocks)
+  - Active projects (distinct project directories touched in the window)
+  - Dominant model (Claude model that consumed the most tokens)
+  - Estimated cost in USD (Haiku / Sonnet / Opus pricing table, May 2025)
+- **Tool card UI** — each tool section (Claude, RTK, Caveman, MemPalace) is now
+  wrapped in a card with rounded corners, a subtle border, and a soft drop shadow.
+  Section dividers removed; card borders provide visual separation.
+- **Compact token formatting** — large token counts displayed as `32.8M` instead of
+  `32 831 809`. Tokens section uses a 4-column layout separated by thin vertical rules.
+
+### Changed
+- `Info.plist CFBundleShortVersionString` now uses `$(MARKETING_VERSION)` instead of
+  a hardcoded string — single source of truth in `project.yml`.
+
 ## [2.0.0] - 2026-05-05
 
 ### Added
