@@ -382,6 +382,8 @@ Claudex stands on the shoulders of three excellent projects:
   preserves its `usage.json` schema.
 - **[RTK](https://github.com/rtk-ai/rtk)** by the rtk-ai team (MIT) — the CLI
   proxy whose stats Claudex surfaces.
+- **[Caveman](https://github.com/jarodxxx/caveman)** — the token-compression
+  mode for Claude Code whose session data Claudex reads and visualises.
 - **[MemPalace](https://github.com/mempalace/mempalace)** by the MemPalace
   team (MIT) — the local-first AI memory whose drawer counts Claudex shows.
 
